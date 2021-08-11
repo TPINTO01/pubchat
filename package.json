@@ -1,0 +1,23 @@
+{
+  "name": "pubchat",
+  "version": "1.0.0",
+  "description": "publat chatooms - all chats are public insofar as data analysis",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TPINTO01/pubchat.git"
+  },
+  "author": "tpl",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TPINTO01/pubchat/issues"
+  },
+  "homepage": "https://github.com/TPINTO01/pubchat#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.1.3"
+  }
+}
