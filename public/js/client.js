@@ -27,6 +27,15 @@ socket.on('message', (message) => {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
+socket.on('output-messages', function(data) {
+  console.log(data);
+  if (data.length) {
+    data.forEach(message => {
+      outputMessage(message);
+    });
+  }
+});
+
 chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
@@ -46,6 +55,7 @@ chatForm.addEventListener('submit', (e) => {
 
 // Output message to DOM
 function outputMessage(message) {
+  console.log(message);
   const div = document.createElement('div');
   div.classList.add('message');
   const p = document.createElement('p');

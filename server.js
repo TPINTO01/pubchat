@@ -1,8 +1,11 @@
-const path       = require('path');
-const http       = require('http');
-const express    = require('express');
+const path          = require('path');
+const http          = require('http');
+const express       = require('express');
+const moment        = require('moment');
 const formatMessage = require('./utils/messages');
-const { Server } = require('socket.io');
+const mongoose      = require('mongoose');
+const Msg           = require('./utils/messageModel');
+const { Server }    = require('socket.io');
 const {
   userJoin,
   getCurrentUser,
@@ -15,35 +18,36 @@ const server = http.createServer(app);
 const io     = new Server(server);
 
 const botName = '';
+const mongoDB = 'use mongodb connect'; 
 
-/*
- * MongoDB
-const mongoose = require('mongoose');
-const Msg = require('./models/messages');
-const mongoDB = 'mongodb+srv://<insert username and passwkrd>@cluster0.3xcg6.mongodb.net/<database name here>?retryWrites=true&w=majority';
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Connect to mongoDB
 mongoose.connect(mongoDB, { useNewUrlParser: true,
                             useUnifiedTopology: true }).then(() => {
   console.log("connected to mongodb");
 }).catch(err => console.log(err));
-*/
 
-app.use(express.static(path.join(__dirname, 'public')));
-
+// Client coonects with socket
 io.on('connection', (socket) => {
   console.log("connection"); 
+
+  var username;
+  Msg.find().then(result => {
+    console.log(result);
+    socket.emit('output-messages', result);
+  });
+
   socket.on('joinRoom', ({ username, room }) => {
     const user = userJoin(socket.id, username, room); 
     socket.join(user.room);
 
-    console.log(user);
-    console.log(user.room);
-
     // Welcome current user
-    socket.emit('message', formatMessage(botName, 'Welcome to pubChat!'));
+    socket.emit('message', formatMessage(botName, 'Welcome to pubChat!', moment().format('h:mm a')));
 
     // Broadcast when a user connects
     socket.broadcast.to(user.room).emit(
-      'message', formatMessage(botName, `${user.username} has joined the chat`)
+      'message', formatMessage(botName, `${user.username} has joined the chat`, moment().format('h:mm a'))
     );
 
     // Send users and room 
@@ -53,9 +57,21 @@ io.on('connection', (socket) => {
     });
 
     // Listen for chat message
+    // write message to DB
     socket.on('chatMessage', msg => {
       const user = getCurrentUser(socket.id);
-      io.to(user.room).emit('message', formatMessage(user.username + ' ', msg));
+      
+      const message = new Msg({
+        text : msg, 
+        username : user.username, 
+        room : user.room,
+        time : moment().format('h:mm a')
+      });
+
+      message.save().then(() => { 
+        io.to(user.room).emit('message', formatMessage(user.username + ' ', msg, message.time))
+      });
+
     });
 
     // Client disconnects
@@ -64,7 +80,7 @@ io.on('connection', (socket) => {
       if (user) {
         io.to(user.room).emit(
           'message',
-          formatMessage(botName, `${user.username} has left the chat`)
+          formatMessage(botName, `${user.username} has left the chat `, moment().format('h:mm a'))
         );
 
         // update users and room info
