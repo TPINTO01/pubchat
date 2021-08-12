@@ -1,6 +1,6 @@
 const socket = io();                                                
 
-const messages     = document.getElementById('chat-form');
+const chatForm     = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
 const roomName     = document.getElementById('room-name');
 const userList     = document.getElementById('users');
@@ -25,6 +25,23 @@ socket.on('message', (message) => {
   outputMessage(message);
   //scroll down
   chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  let msg = e.target.elements.msg.value;
+
+  msg = msg.trim();
+
+  if (!msg) {
+    return false;
+  }
+
+  socket.emit('chatMessage', msg);
+
+  e.target.elements.msg.value = '';
+  e.target.elements.msg.focus();
 });
 
 // Output message to DOM
