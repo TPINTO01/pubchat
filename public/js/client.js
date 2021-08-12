@@ -6,20 +6,26 @@ const roomName     = document.getElementById('room-name');
 const userList     = document.getElementById('users');
 
 // Get username and room from URL
-
-console.log(location.search);
-const { username, room } = getJsonFromUrl(); 
+const { username, room } = parseURLQuery(); 
 
 console.log(username);
 console.log(room);
 
 socket.emit('joinRoom', { username, room });
 
+// Get room and users
 socket.on('roomUsers', ({ room, users }) => {
-  outputRoomName(room);
+  roomName.innerText = room;
   outputUsers(users);
 });
 
+// Message from Server
+socket.on('message', (message) => {
+  console.log(message);
+  outputMessage(message);
+  //scroll down
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
 
 // Output message to DOM
 function outputMessage(message) {
@@ -37,10 +43,11 @@ function outputMessage(message) {
   document.querySelector('.chat-messages').appendChild(div);
 }
 
-// Add room name to DOM
+/*
 function outputRoomName(room) {
   roomName.innerText = room;
 }
+*/
 
 // Add users to DOM
 function outputUsers(users) {
@@ -52,7 +59,7 @@ function outputUsers(users) {
   });
 }
 
-function getJsonFromUrl() {
+function parseURLQuery() {
   url = location.search;
   var query = url.substr(1);
   var result = {};

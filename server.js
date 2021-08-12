@@ -1,6 +1,7 @@
 const path       = require('path');
 const http       = require('http');
 const express    = require('express');
+const formatMessage = require('./utils/messages');
 const { Server } = require('socket.io');
 const {
   userJoin,
@@ -12,6 +13,8 @@ const {
 const app    = express();
 const server = http.createServer(app);
 const io     = new Server(server);
+
+const botName = '';
 
 /*
  * MongoDB
@@ -26,16 +29,6 @@ mongoose.connect(mongoDB, { useNewUrlParser: true,
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-/*
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/views/index.html');
-});
-
-app.get('/chat.html', (req, res) => {
-  res.sendFile(__dirname + '/views/chat.html');
-});
-*/
-
 io.on('connection', (socket) => {
   console.log("connection"); 
   socket.on('joinRoom', ({ username, room }) => {
@@ -45,9 +38,35 @@ io.on('connection', (socket) => {
     console.log(user);
     console.log(user.room);
 
+    // Welcome current user
+    socket.emit('message', formatMessage(botName, 'Welcome to pubChat!'));
+
+    // Broadcast when a user connects
+    socket.broadcast.to(user.room).emit(
+      'message', formatMessage(botName, `${user.username} has joined the chat`)
+    );
+
+    // Send users and room 
     io.to(user.room).emit('roomUsers', {
       room  : user.room,
       users : getRoomUsers(user.room)
+    });
+
+    // Client disconnects
+    socket.on('disconnect', () => {
+      const user = userLeave(socket.id);
+      if (user) {
+        io.to(user.room).emit(
+          'message',
+          formatMessage(botName, `${user.username} has left the chat`)
+        );
+
+        // update users and room info
+        io.to(user.room).emit('roomUsers', {
+          room: user.room,
+          users: getRoomUsers(user.room)
+        });
+      }
     });
   });
 });
