@@ -18,7 +18,7 @@ const server = http.createServer(app);
 const io     = new Server(server);
 
 const botName = '';
-const mongoDB = 'use mongodb connect'; 
+const mongoDB = 'placeholder'; 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -31,19 +31,27 @@ mongoose.connect(mongoDB, { useNewUrlParser: true,
 // Client coonects with socket
 io.on('connection', (socket) => {
   console.log("connection"); 
-
-  var username;
+ 
+  /*
   Msg.find().then(result => {
     console.log(result);
     socket.emit('output-messages', result);
   });
-
+  */
+ 
+  var username;
   socket.on('joinRoom', ({ username, room }) => {
     const user = userJoin(socket.id, username, room); 
+    
+    Msg.find({room : room}).then(result => {
+      console.log(result);
+      socket.emit('output-messages', result);
+    });
+    
     socket.join(user.room);
 
     // Welcome current user
-    socket.emit('message', formatMessage(botName, 'Welcome to pubChat!', moment().format('h:mm a')));
+    //socket.emit('message', formatMessage(botName, 'Welcome to pubChat!', moment().format('h:mm a')));
 
     // Broadcast when a user connects
     socket.broadcast.to(user.room).emit(
