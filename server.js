@@ -32,13 +32,6 @@ mongoose.connect(mongoDB, { useNewUrlParser: true,
 io.on('connection', (socket) => {
   console.log("connection"); 
  
-  /*
-  Msg.find().then(result => {
-    console.log(result);
-    socket.emit('output-messages', result);
-  });
-  */
- 
   var username;
   socket.on('joinRoom', ({ username, room }) => {
     const user = userJoin(socket.id, username, room); 
@@ -49,10 +42,7 @@ io.on('connection', (socket) => {
     });
     
     socket.join(user.room);
-
-    // Welcome current user
-    //socket.emit('message', formatMessage(botName, 'Welcome to pubChat!', moment().format('h:mm a')));
-
+    
     // Broadcast when a user connects
     socket.broadcast.to(user.room).emit(
       'message', formatMessage(botName, `${user.username} has joined the chat`, moment().format('h:mm a'))
